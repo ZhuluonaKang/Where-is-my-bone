@@ -1,11 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class GroupManager : MonoBehaviour
 {
-    public List<FlockingBehavior> slimes; 
-    public Transform[] waypoints; 
+    public List<NavMeshAgent> slimes;
+    public Transform[] waypoints;
     private int currentWaypointIndex = 0;
 
     void Start()
@@ -16,36 +17,39 @@ public class GroupManager : MonoBehaviour
         }
     }
 
-    public void Patrol(FlockingBehavior flockingBehavior)
+    public void Patrol(NavMeshAgent agent)
     {
-        if (waypoints.Length == 0) return;
+        // Exit if there are no waypoints or the agent is null
+        if (waypoints.Length == 0 || agent == null) return;
 
+        // Set the agent's destination to the current waypoint
         Transform targetWaypoint = waypoints[currentWaypointIndex];
-        flockingBehavior.ApplyFlockingBehavior(targetWaypoint.position);
+        agent.SetDestination(targetWaypoint.position);
 
-        
-        if (Vector3.Distance(flockingBehavior.transform.position, targetWaypoint.position) < 1f)
+        // Move to the next waypoint if close enough to the current one
+        if (Vector3.Distance(agent.transform.position, targetWaypoint.position) < 1f)
         {
             currentWaypointIndex = (currentWaypointIndex + 1) % waypoints.Length;
         }
     }
 
-    public void AddSlime(FlockingBehavior slime)
+    public void AddSlime(NavMeshAgent agent)
     {
-        if (!slimes.Contains(slime))
+        if (!slimes.Contains(agent))
         {
-            slimes.Add(slime);
+            slimes.Add(agent);
         }
     }
 
-    public void RemoveSlime(FlockingBehavior slime)
+    public void RemoveSlime(NavMeshAgent agent)
     {
-        if (slimes.Contains(slime))
+        if (slimes.Contains(agent))
         {
-            slimes.Remove(slime);
+            slimes.Remove(agent);
         }
     }
 }
+
 
 
 

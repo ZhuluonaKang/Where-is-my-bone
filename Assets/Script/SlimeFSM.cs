@@ -8,34 +8,30 @@ public class SlimeFSM : MonoBehaviour
     public enum State { Patrol, Chase, Attack, Dead, ReturnToPatrol }
     public State currentState;
 
-    public Transform player; 
+    public Transform player;
     public float chaseDistance = 10f;
     public float attackDistance = 2f;
     public float health = 100f;
-    public float patrolSpeed = 2f;
-    public float chaseSpeed = 4f;
 
     private NavMeshAgent agent;
-    private FlockingBehavior flockingBehavior;
     private GroupManager groupManager;
     private Vector3 initialPosition;
 
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
-        flockingBehavior = GetComponent<FlockingBehavior>();
         groupManager = FindObjectOfType<GroupManager>();
         initialPosition = transform.position;
 
         if (agent == null) Debug.LogError("NavMeshAgent component missing!");
-        if (flockingBehavior == null) Debug.LogError("FlockingBehavior component missing!");
         if (groupManager == null) Debug.LogError("GroupManager not found!");
 
-        currentState = State.Patrol;
+        currentState = State.Patrol; // Start in patrol state
     }
 
     void Update()
     {
+        // Execute behavior based on the current state
         switch (currentState)
         {
             case State.Patrol:
@@ -60,10 +56,10 @@ public class SlimeFSM : MonoBehaviour
     {
         if (groupManager != null)
         {
-            flockingBehavior.IsFlocking = true;
-            groupManager.Patrol(flockingBehavior);
+            groupManager.Patrol(agent); // Patrol as a group
         }
 
+        // Transition to Chase if the player is within range
         if (Vector3.Distance(transform.position, player.position) < chaseDistance)
         {
             currentState = State.Chase;
@@ -72,13 +68,11 @@ public class SlimeFSM : MonoBehaviour
 
     private void Chase()
     {
-        flockingBehavior.IsFlocking = false;
-        agent.speed = chaseSpeed;
-
         if (player != null && agent.isOnNavMesh)
         {
-            agent.SetDestination(player.position);
+            agent.SetDestination(player.position); // Move towards the player
 
+            // Transition to Attack if close, or return to patrol if too far
             if (Vector3.Distance(transform.position, player.position) < attackDistance)
             {
                 currentState = State.Attack;
@@ -92,9 +86,10 @@ public class SlimeFSM : MonoBehaviour
 
     private void Attack()
     {
-        agent.isStopped = true;
+        agent.isStopped = true; // Stop movement
         Debug.Log("Attacking the player!");
 
+        // Transition back to Chase if the player moves out of range
         if (Vector3.Distance(transform.position, player.position) > attackDistance)
         {
             currentState = State.Chase;
@@ -104,19 +99,18 @@ public class SlimeFSM : MonoBehaviour
 
     private void Dead()
     {
-        Debug.Log("Slime is dead!");
-        Destroy(gameObject);
+        Debug.Log("Slime is dead!"); // Log death
+        Destroy(gameObject); // Remove the slime
     }
 
     private void ReturnToPatrol()
     {
-        agent.speed = patrolSpeed;
-
         if (agent.isOnNavMesh)
         {
-            agent.SetDestination(initialPosition);
+            agent.SetDestination(initialPosition); // Move back to the initial position
         }
 
+        // Transition to Patrol state when close to the initial position
         if (Vector3.Distance(transform.position, initialPosition) < 1f)
         {
             currentState = State.Patrol;
@@ -125,13 +119,19 @@ public class SlimeFSM : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
-        health -= damage;
+        if (currentState == State.Dead) return; // Ignore if already dead
+
+        health -= damage; // Reduce health
+        Debug.Log($"{gameObject.name} took {damage} damage! Remaining health: {health}");
+
+        // Transition to Dead state if health drops to zero or below
         if (health <= 0)
         {
             currentState = State.Dead;
         }
     }
 }
+
 
 
 

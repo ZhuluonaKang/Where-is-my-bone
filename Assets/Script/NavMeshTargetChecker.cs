@@ -5,10 +5,10 @@ using UnityEngine.AI;
 
 public class NavMeshTargetChecker : MonoBehaviour
 {
-    public Transform[] waypoints; // 巡逻点数组
-    public float waypointTolerance = 0.5f; // 到达巡逻点的容忍距离
+    public Transform[] waypoints; 
+    public float waypointTolerance = 0.5f; 
     private NavMeshAgent agent;
-    private int currentWaypointIndex = 0; // 当前巡逻点索引
+    private int currentWaypointIndex = 0; 
 
     void Start()
     {
@@ -31,10 +31,7 @@ public class NavMeshTargetChecker : MonoBehaviour
             Patrol();
             DrawPath(agent.path);
         }
-        else
-        {
-            Debug.Log("Agent has no path!");
-        }
+        
     }
 
     void Patrol()
